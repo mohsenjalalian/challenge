@@ -1,0 +1,52 @@
+version: '2.3'
+services:
+    ch-nginx:
+        build:
+            context: ./
+            dockerfile: ./docker/ch-nginx/Dockerfile
+        image: ch-nginx:latest
+        container_name: ch-nginx
+        volumes:
+            - .:/src
+        ports:
+            - 80:80
+            - 443:443
+        depends_on:
+            - ch-php-fpm
+    ch-php-fpm:
+        build:
+            context: ./
+            dockerfile: ./docker/ch-php-fpm/Dockerfile
+        image: ch-php-fpm:latest
+        container_name: ch-php-fpm
+        volumes:
+            - .:/src
+    ch-php-cli:
+        build:
+            context: ./
+            dockerfile: ./docker/ch-php-cli/Dockerfile
+        image: ch-php-cli:latest
+        container_name: ch-php-cli
+        tty: true
+        stdin_open: true
+        volumes:
+            - .:/src
+            - ./docker/ch-php-cli/log:/etc/supervisor/log
+    ch-mariadb:
+        image: mariadb:10.3.11
+        container_name: ch-mariadb
+        ports:
+            - 3306:3306
+        volumes:
+            - mariadata:/var/lib/mysql
+        environment:
+            - MYSQL_ROOT_PASSWORD=123456
+    ch-phpmyadmin:
+        image: phpmyadmin/phpmyadmin:4.8.3
+        container_name: ch-phpmyadmin
+        environment:
+            - PMA_HOST=ch-mariadb
+        ports:
+            - 8080:80
+volumes:
+    mariadata:
