@@ -91,6 +91,9 @@ return [
             'prefix_indexes' => true,
         ],
 
+        'elastic' => [
+            'host' => env('ELASTIC_HOST', 'elasticsearch'),
+        ],
     ],
 
     /*
