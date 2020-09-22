@@ -38,7 +38,7 @@ services:
         ports:
             - 3306:3306
         volumes:
-            - mariadata:/var/lib/mysql
+            - ch-mariadata:/var/lib/mysql
         environment:
             - MYSQL_ROOT_PASSWORD=123456
     ch-phpmyadmin:
@@ -48,5 +48,26 @@ services:
             - PMA_HOST=ch-mariadb
         ports:
             - 8080:80
+    ch-elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
+        container_name: ch-elasticsearch
+        volumes:
+            - ch-elasticsearchdata:/usr/share/elasticsearch/data
+        environment:
+            - node.name=stats-elasticsearch-node-01
+            - cluster.name=stats-elasticsearch-cluster-01
+            - discovery.type=single-node
+            - bootstrap.memory_lock=true
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+    ch-kibana:
+        image: docker.elastic.co/kibana/kibana:7.6.0
+        container_name: ch-kibana
+        environment:
+            - ELASTICSEARCH_HOSTS=http://ch-elasticsearch:9200
 volumes:
-    mariadata:
+    ch-mariadata:
+    ch-elasticsearchdata:
