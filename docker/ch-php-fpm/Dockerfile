@@ -18,6 +18,8 @@ RUN docker-php-ext-install pdo_mysql mysqli bcmath sockets zip
 # create php.ini
 COPY ./docker/ch-php-fpm/php.ini /usr/local/etc/php/php.ini
 
+RUN pecl install redis &&  docker-php-ext-enable redis
+
 # create www.conf
 COPY ./docker/ch-php-fpm/www.conf /usr/local/etc/php-fpm.d/www.conf
 

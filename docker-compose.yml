@@ -68,6 +68,33 @@ services:
         container_name: ch-kibana
         environment:
             - ELASTICSEARCH_HOSTS=http://ch-elasticsearch:9200
+        ports:
+          - 5601:5601
+    ch-rabbitmq:
+        build:
+            context: ./
+            dockerfile: ./docker/ch-rabbitmq/Dockerfile
+        image: ch-rabbitmq:latest
+        container_name: ch-rabbitmq
+        hostname: host_ch
+        sysctls:
+            - net.core.somaxconn=1024
+        tty: true
+        volumes:
+            - ch-rabbitmqdata:/var/lib/rabbitmq
+        ports:
+            - 15672:15672
+    ch-redis:
+        image: redis:5.0.7
+        container_name: ch-redis
+        volumes:
+            - ch-redis-data:/data
+        ports:
+          - 6379:6379
 volumes:
     ch-mariadata:
     ch-elasticsearchdata:
+    ch-redis-data:
+    ch-rabbitmqdata:
+      driver: local
+
