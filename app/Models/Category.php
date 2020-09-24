@@ -10,6 +10,16 @@ class Category extends Model
     use HasFactory;
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'title',
+    ];
+
+
+    /**
      * The products that belong to the category.
      */
     public function products()

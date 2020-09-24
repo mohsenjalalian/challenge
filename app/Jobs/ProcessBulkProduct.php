@@ -2,8 +2,10 @@
 
 namespace App\Jobs;
 
+use App\Models\Category;
 use App\Models\Product;
-use Carbon\Carbon;
+use App\SearchableModels\ProductSearchableModel;
+use SplFileObject;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -35,23 +37,53 @@ class ProcessBulkProduct implements ShouldQueue
         $file = 'app/products/'.$this->fileName;
         $path = storage_path($file);
 
-        $file = new \SplFileObject($path);
-        $file->setFlags(\SplFileObject::READ_CSV);
+        $file = new SplFileObject($path);
+        $file->setFlags(SplFileObject::READ_CSV);
 
-        $products = [];
         foreach ($file as $key => $row) {
+            $categoryIds = [];
             if ($file->key() != 0 && $file->valid()) {
-                $products['name'] = $row[0];
-                $products['price'] = $row[1];
-                $products['description'] = $row[2];
-                $products['count'] = $row[4];
-                $products['created_at'] = Carbon::now();
-                $products['updated_at'] = Carbon::now();
-            }
-        }
+                $categoryTitles = explode(',', $row[3]);
+                foreach ($categoryTitles as $categoryTitle) {
+                    $category = Category::where('title', $categoryTitle);
 
-        if (!empty($products)) {
-            Product::insert($products);
+                    if (!$category instanceof Category) {
+                        $category = Category::create([
+                            'title' => $categoryTitle
+                        ]);
+                    }
+
+                    $categoryIds[] = $category->id;
+                }
+                $product = Product::create(
+                    [
+                        'name' => $row[0],
+                        'price' => $row[1],
+                        'description' => $row[2],
+                        'count' => $row[4],
+                    ]
+                );
+
+                $product->categories()->attach($categoryIds);
+
+
+                $searchableProducts['body'][] = [
+                    'index' => [
+                        '_index' => ProductSearchableModel::INDEX_NAME,
+                        '_type' => ProductSearchableModel::TYPE_NAME
+                    ]
+                ];
+
+                $searchableProducts['body'][] = [
+                    'name'     => $row[0],
+                    'price' => $row[1],
+                    'description' => $row[2],
+                    'count' => $row[4],
+                    'categories' => $categoryTitles
+                ];
+
+                ProductSearchableModel::client()->bulk($searchableProducts);
+            }
         }
     }
 }
