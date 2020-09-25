@@ -6,6 +6,7 @@ class ProductSearchableModel extends SearchableModel
 {
     public const INDEX_NAME = 'products';
     public const TYPE_NAME = '_doc';
+    public const PAGE_SIZE = 2;
 
     // Here you can specify a mapping for model fields
     private $mapping = [

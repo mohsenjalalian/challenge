@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,4 +21,24 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/bulk', [ProductController::class, 'bulk'])->name('product.bulk');
+Route::group([
+
+    'middleware' => 'api',
+    'prefix' => 'auth'
+
+], function ($router) {
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('logout', [AuthController::class, 'logout']);
+});
+
+Route::prefix('products')->group(function () {
+
+    Route::post('/bulk', [ProductController::class, 'bulk'])
+        ->name('product.bulk')
+        ->middleware('jwt.auth');
+
+    Route::get('/', [ProductController::class, 'index'])
+        ->name('product.index');
+
+});

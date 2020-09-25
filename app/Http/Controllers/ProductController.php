@@ -2,92 +2,73 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BulkProduct;
 use App\Jobs\ProcessBulkProduct;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\SearchableModels\ProductSearchableModel;
+use App\SearchableModels\SearchableModel;
+use Illuminate\ {
+    Pagination\Paginator,
+    Http\Request,
+    Http\Response,
+    Http\JsonResponse
+};
 
 class ProductController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $page = $request->get('page');
+        $pageSize = ProductSearchableModel::PAGE_SIZE;
+        $filter = $request->get('filter');
+
+        if (isset($filter)) {
+            $params = [
+                'index' => 'products',
+                'from' => $page,
+                'size' =>  $pageSize,
+                'body'  => [
+                    'query' => [
+                        'match' => $filter
+                    ]
+                ]
+            ];
+        } else {
+            $params = [
+                'index' => 'products',
+                'from' => $page,
+                'size' =>  $pageSize
+            ];
+        }
+
+        $results = SearchableModel::client()->search($params)['hits']['hits'];
+
+        $startingPoint = ($page * $pageSize) - $pageSize;
+
+        $results = array_slice($results, $startingPoint, $pageSize, true);
+
+        $results= new Paginator($results, $pageSize, $page);
+
+        return response()->json($results, Response::HTTP_OK);
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
+     * @param BulkProduct $request
+     * @return JsonResponse
      */
-    public function create()
+    public function bulk(BulkProduct $request)
     {
-        //
-    }
+        /** @var Request $validatedRequest */
+        $validatedRequest = $request->validated();
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        $fileName = uniqid(). '.' .$validatedRequest->file('products')->clientExtension();
+        $validatedRequest->file('products')->storeAs('products', $fileName);
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
-
-    public function bulk(Request $request)
-    {
-        $fileName = uniqid(). '.' .$request->file('products')->clientExtension();
-        $request->file('products')->storeAs('products', $fileName);
         ProcessBulkProduct::dispatch($fileName)->onQueue('bulk_product');
+
+        return response()->json([], Response::HTTP_NO_CONTENT);
     }
 }
