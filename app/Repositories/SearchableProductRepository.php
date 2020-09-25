@@ -7,7 +7,13 @@ use App\SearchableModels\SearchableProductModel;
 
 class SearchableProductRepository
 {
-    public function match($filter, $from, $size)
+    /**
+     * @param array $filter
+     * @param $from
+     * @param int $size
+     * @return mixed
+     */
+    public function match(array $filter, $from, int $size)
     {
         $params = [
             'index' => SearchableProductModel::INDEX_NAME,
@@ -23,7 +29,12 @@ class SearchableProductRepository
         return SearchableModel::client()->search($params)['hits']['hits'];
     }
 
-    public function matchAll($from, $size)
+    /**
+     * @param $from
+     * @param int $size
+     * @return mixed
+     */
+    public function matchAll($from, int $size)
     {
         $params = [
             'index' => SearchableProductModel::INDEX_NAME,
@@ -31,6 +42,6 @@ class SearchableProductRepository
             'size' => $size
         ];
 
-        return SearchableModel::client()->search($params['hits']['hits']);
+        return SearchableModel::client()->search($params)['hits']['hits'];
     }
 }
