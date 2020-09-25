@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\BulkProduct;
+use App\Http\Responses\IndexProduct;
 use App\Jobs\ProcessBulkProduct;
 use App\Repositories\SearchableProductRepository;
 use App\SearchableModels\SearchableProductModel;
@@ -24,9 +25,10 @@ class ProductController extends Controller
 
     /**
      * @param Request $request
+     * @param IndexProduct $indexProductResponse
      * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request, IndexProduct $indexProductResponse)
     {
         $page = $request->get('page');
         $pageSize = SearchableProductModel::PAGE_SIZE;
@@ -38,9 +40,11 @@ class ProductController extends Controller
             $results = $this->searchableProductRepository->matchAll($page, $pageSize);
         }
 
-        $results = manualPagination($results, $page, $pageSize);
+	    $response = $indexProductResponse->response($results);
 
-        return response()->json($results, Response::HTTP_OK);
+        $responseWithPagination = manualPagination($response, $page, $pageSize);
+
+        return response()->json($responseWithPagination, Response::HTTP_OK);
     }
 
     /**
