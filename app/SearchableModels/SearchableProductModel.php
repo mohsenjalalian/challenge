@@ -2,7 +2,7 @@
 
 namespace App\SearchableModels;
 
-class ProductSearchableModel extends SearchableModel
+class SearchableProductModel extends SearchableModel
 {
     public const INDEX_NAME = 'products';
     public const TYPE_NAME = '_doc';

@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Indices;
 
-use App\SearchableModels\ProductSearchableModel;
+use App\SearchableModels\SearchableProductModel;
 use App\SearchableModels\SearchableModel;
 use Illuminate\Console\Command;
 
@@ -26,9 +26,9 @@ class CreateProductsIndex extends Command
 
     /**
      * CreateProductsIndex constructor.
-     * @param ProductSearchableModel $productSearchableModel
+     * @param SearchableProductModel $productSearchableModel
      */
-    public function __construct(ProductSearchableModel $productSearchableModel)
+    public function __construct(SearchableProductModel $productSearchableModel)
     {
         parent::__construct();
 
@@ -43,7 +43,7 @@ class CreateProductsIndex extends Command
     public function handle()
     {
         $createIndexParams = [
-            'index' => ProductSearchableModel::INDEX_NAME,
+            'index' => SearchableProductModel::INDEX_NAME,
             'body' => [
                 'mappings' => $this->mapping
             ]

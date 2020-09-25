@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Category;
 use App\Models\Product;
-use App\SearchableModels\ProductSearchableModel;
+use App\SearchableModels\SearchableProductModel;
 use SplFileObject;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -17,6 +17,13 @@ class ProcessBulkProduct implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private $fileName;
+
+    private $productName;
+    private $productPrice;
+    private $productDescription;
+    private $productCount;
+    private $productCategoryTitles;
+    private $productCategoryIds;
 
     /**
      * ProcessBulkProduct constructor.
@@ -41,49 +48,74 @@ class ProcessBulkProduct implements ShouldQueue
         $file->setFlags(SplFileObject::READ_CSV);
 
         foreach ($file as $key => $row) {
-            $categoryIds = [];
             if ($file->key() != 0 && $file->valid()) {
-                $categoryTitles = explode(',', $row[3]);
-                foreach ($categoryTitles as $categoryTitle) {
-                    $category = Category::where('title', $categoryTitle);
 
-                    if (!$category instanceof Category) {
-                        $category = Category::create([
-                            'title' => $categoryTitle
-                        ]);
-                    }
+                $this->setProductRow($row);
 
-                    $categoryIds[] = $category->id;
-                }
+                $categoryIds = $this->getCategoryIds($this->productCategoryTitles);
+
                 $product = Product::create(
                     [
-                        'name' => $row[0],
-                        'price' => $row[1],
-                        'description' => $row[2],
-                        'count' => $row[4],
+                        'name' => $this->productName,
+                        'price' => $this->productPrice,
+                        'description' => $this->productDescription,
+                        'count' => $this->productCount,
                     ]
                 );
 
                 $product->categories()->attach($categoryIds);
 
-
                 $searchableProducts['body'][] = [
                     'index' => [
-                        '_index' => ProductSearchableModel::INDEX_NAME,
-                        '_type' => ProductSearchableModel::TYPE_NAME
+                        '_index' => SearchableProductModel::INDEX_NAME,
+                        '_type' => SearchableProductModel::TYPE_NAME
                     ]
                 ];
 
                 $searchableProducts['body'][] = [
-                    'name'     => $row[0],
-                    'price' => $row[1],
-                    'description' => $row[2],
-                    'count' => $row[4],
-                    'categories' => $categoryTitles
+                    'name'     => $this->productName,
+                    'price' => $this->productPrice,
+                    'description' => $this->productDescription,
+                    'count' => $this->productCount,
+                    'categories' => $this->productCategoryTitles
                 ];
 
-                ProductSearchableModel::client()->bulk($searchableProducts);
+                SearchableProductModel::client()->bulk($searchableProducts);
             }
         }
+    }
+
+    /**
+     * @param array $row
+     */
+    private function setProductRow(array $row)
+    {
+        $this->productCategoryTitles = explode(',', $row[3]);
+        $this->productName = $row[0];
+        $this->productPrice = $row[1];
+        $this->productDescription = $row[2];
+        $this->productCount = $row[4];
+    }
+
+    /**
+     * @param array $productCategoryTitles
+     * @return array
+     */
+    private function getCategoryIds(array $productCategoryTitles)
+    {
+        $categoryIds = [];
+        foreach ($productCategoryTitles as $categoryTitle) {
+            $category = Category::where('title', $categoryTitle);
+
+            if (!$category instanceof Category) {
+                $category = Category::create([
+                    'title' => $categoryTitle
+                ]);
+            }
+
+            $categoryIds[] = $category->id;
+        }
+
+        return $categoryIds;
     }
 }

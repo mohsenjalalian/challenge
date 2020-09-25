@@ -4,10 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BulkProduct;
 use App\Jobs\ProcessBulkProduct;
-use App\SearchableModels\ProductSearchableModel;
-use App\SearchableModels\SearchableModel;
+use App\Repositories\SearchableProductRepository;
+use App\SearchableModels\SearchableProductModel;
 use Illuminate\ {
-    Pagination\Paginator,
     Http\Request,
     Http\Response,
     Http\JsonResponse
@@ -15,6 +14,18 @@ use Illuminate\ {
 
 class ProductController extends Controller
 {
+    private $searchableProductRepository;
+
+    /**
+     * ProductController constructor.
+     * @param SearchableProductRepository $searchableProductRepository
+     */
+    public function __construct(SearchableProductRepository $searchableProductRepository)
+    {
+        $this->searchableProductRepository = $searchableProductRepository;
+    }
+
+
     /**
      * @param Request $request
      * @return JsonResponse
@@ -22,35 +33,16 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $page = $request->get('page');
-        $pageSize = ProductSearchableModel::PAGE_SIZE;
+        $pageSize = SearchableProductModel::PAGE_SIZE;
         $filter = $request->get('filter');
 
         if (isset($filter)) {
-            $params = [
-                'index' => 'products',
-                'from' => $page,
-                'size' =>  $pageSize,
-                'body'  => [
-                    'query' => [
-                        'match' => $filter
-                    ]
-                ]
-            ];
+            $results = $this->searchableProductRepository->match($filter, $page, $pageSize);
         } else {
-            $params = [
-                'index' => 'products',
-                'from' => $page,
-                'size' =>  $pageSize
-            ];
+            $results = $this->searchableProductRepository->matchAll($page, $pageSize);
         }
 
-        $results = SearchableModel::client()->search($params)['hits']['hits'];
-
-        $startingPoint = ($page * $pageSize) - $pageSize;
-
-        $results = array_slice($results, $startingPoint, $pageSize, true);
-
-        $results= new Paginator($results, $pageSize, $page);
+        $results = manualPagination($results, $page, $pageSize);
 
         return response()->json($results, Response::HTTP_OK);
     }
