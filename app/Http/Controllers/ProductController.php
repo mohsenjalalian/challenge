@@ -6,11 +6,7 @@ use App\Http\Requests\BulkProduct;
 use App\Jobs\ProcessBulkProduct;
 use App\Repositories\SearchableProductRepository;
 use App\SearchableModels\SearchableProductModel;
-use Illuminate\ {
-    Http\Request,
-    Http\Response,
-    Http\JsonResponse
-};
+use Illuminate\{Http\Request, Http\Response, Http\JsonResponse, Http\UploadedFile};
 
 class ProductController extends Controller
 {
@@ -53,11 +49,13 @@ class ProductController extends Controller
      */
     public function bulk(BulkProduct $request)
     {
-        /** @var Request $validatedRequest */
-        $validatedRequest = $request->validated();
+        $validatedData = $request->validated();
 
-        $fileName = uniqid(). '.' .$validatedRequest->file('products')->clientExtension();
-        $validatedRequest->file('products')->storeAs('products', $fileName);
+        /** @var UploadedFile $productsFile */
+        $productsFile = $validatedData['products'];
+
+        $fileName = uniqid(). '.' .$productsFile->clientExtension();
+        $productsFile->storeAs('products', $fileName);
 
         ProcessBulkProduct::dispatch($fileName)->onQueue('bulk_product');
 

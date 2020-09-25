@@ -47,6 +47,8 @@ class ProcessBulkProduct implements ShouldQueue
         $file = new SplFileObject($path);
         $file->setFlags(SplFileObject::READ_CSV);
 
+        //Todo check for bulk insert
+
         foreach ($file as $key => $row) {
             if ($file->key() != 0 && $file->valid()) {
 
