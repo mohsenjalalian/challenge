@@ -61,7 +61,7 @@ class ProductController extends Controller
         $fileName = uniqid(). '.' .$productsFile->clientExtension();
         $productsFile->storeAs('products', $fileName);
 
-        ProcessBulkProduct::dispatch($fileName)->onQueue('bulk_product');
+        ProcessBulkProduct::dispatch($fileName)->onQueue(ProcessBulkProduct::QUEUE_NAME);
 
         return response()->json([], Response::HTTP_NO_CONTENT);
     }

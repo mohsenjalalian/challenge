@@ -63,13 +63,22 @@ services:
             memlock:
                 soft: -1
                 hard: -1
-#    ch-kibana:
-#        image: docker.elastic.co/kibana/kibana:7.5.0
-#        container_name: ch-kibana
-#        environment:
-#            - ELASTICSEARCH_HOSTS=http://ch-elasticsearch:9200
-#        ports:
-#          - 5601:5601
+    ch-kibana:
+        image: docker.elastic.co/kibana/kibana:7.5.0
+        container_name: ch-kibana
+        environment:
+            - ELASTICSEARCH_HOSTS=http://ch-elasticsearch:9200
+        ports:
+          - 5601:5601
+    ch-swagger-ui:
+      image: swaggerapi/swagger-ui
+      container_name: ch-swagger-ui
+      ports:
+        - "8082:8080"
+      volumes:
+        - ./docs/swagger/openapi.json:/openapi.json
+      environment:
+        SWAGGER_JSON: /openapi.json
     ch-redis:
         image: redis:5.0.7
         container_name: ch-redis

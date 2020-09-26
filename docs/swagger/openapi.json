@@ -1,0 +1,99 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "description": "this is swagger for a code challenge",
+        "version": "1.0.0",
+        "title": "challenge",
+        "contact": {
+            "email": "jalalianmohsen@gmail.com"
+        }
+    },
+    "tags": [
+        {
+            "name": "Products",
+            "description": "products endpoints"
+        }
+    ],
+    "paths": {
+        "/products": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "description": "return products list",
+                "parameters": [
+                    {
+                        "name": "filter",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/products/bulk": {
+            "post": {
+                "tags": [
+                    "store products csv file"
+                ],
+                "summary": "upload products csv file and store them in background",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "products"
+                                ],
+                                "properties": {
+                                    "products": {
+                                        "description": "csv file to upload",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "servers": [
+        {
+            "url": "http://back.ch/api"
+        }
+    ],
+    "components": {
+    }
+}

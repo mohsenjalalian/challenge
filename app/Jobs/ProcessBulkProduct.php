@@ -14,6 +14,8 @@ use Illuminate\Queue\SerializesModels;
 
 class ProcessBulkProduct implements ShouldQueue
 {
+    public const QUEUE_NAME = 'bulk_product';
+
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private $fileName;
@@ -41,6 +43,7 @@ class ProcessBulkProduct implements ShouldQueue
      */
     public function handle()
     {
+        //Todo need refactor
         $file = 'app/products/'.$this->fileName;
         $path = storage_path($file);
 
